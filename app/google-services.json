@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "888505449603",
+    "firebase_url": "https://immanuelasgram.firebaseio.com",
+    "project_id": "immanuelasgram",
+    "storage_bucket": "immanuelasgram.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:888505449603:android:319630c7f8a756a1962fb6",
+        "android_client_info": {
+          "package_name": "com.codepath.immanuelagram"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "888505449603-q9s6aejafshng7u4s1rt3j0v95kt1rk9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCradTHnsn_2pGV6HjyCwl7TTjPNa-49Bk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "888505449603-q9s6aejafshng7u4s1rt3j0v95kt1rk9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
