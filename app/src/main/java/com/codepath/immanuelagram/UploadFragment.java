@@ -2,7 +2,9 @@ package com.codepath.immanuelagram;
 
 import android.Manifest;
 import android.accessibilityservice.AccessibilityService;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
@@ -74,7 +76,6 @@ import static android.content.Context.CAMERA_SERVICE;
         private ImageView ivPostImage;
         private Button btnSubmit;
         private File photoFile;
-        private String photoFileName = "photo.jpg";
         private FirebaseAuth mAuth;
         private FirebaseAuth.AuthStateListener mAuthListener;
         private UploadTask uploadTask;
@@ -85,6 +86,10 @@ import static android.content.Context.CAMERA_SERVICE;
         private DatabaseReference mRef;
         private StorageReference storageRef;
         private Context mcontext;
+        public StorageReference fileref;
+        public int name_count;
+
+        public SharedPreferences sharedPref;
 
 
 
@@ -95,8 +100,21 @@ import static android.content.Context.CAMERA_SERVICE;
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            // Inflate the layout for this fragment
 
+            if (getResources().getInteger(R.integer.name_count) == 0){
+                sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putInt(getString(R.string.name_count), name_count);
+                editor.commit();
+            }
+            else {
+
+                sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+                name_count = getResources().getInteger(R.integer.name_count);
+                Log.d(TAG, "onCreateView:" + name_count);
+
+            }
+            // Inflate the layout for this fragment
             return inflater.inflate(R.layout.fragment_upload, container, false);
         }
 
@@ -115,7 +133,7 @@ import static android.content.Context.CAMERA_SERVICE;
             storageRef =storage.getReference();
             mcontext = getContext();
             mFirebaseDatabase = FirebaseDatabase.getInstance();
-            mRef = mFirebaseDatabase.getReference();
+            mRef = mFirebaseDatabase.getReference("userphotos");
 
 
 
@@ -168,7 +186,14 @@ import static android.content.Context.CAMERA_SERVICE;
 
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             // Create a File reference to access to future access
-            photoFile = getPhotoFileUri(photoFileName);
+
+            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            name_count = name_count +1;
+            editor.putInt(getString(R.string.name_count), name_count);
+            editor.commit();
+            photoFile = getPhotoFileUri(name_count);
+
 
             // wrap File object into a content provider
             // required for API >= 24
@@ -205,7 +230,7 @@ import static android.content.Context.CAMERA_SERVICE;
         }
 
         // Returns the File for a photo stored on disk given the fileName
-        public File getPhotoFileUri(String fileName) {
+        public File getPhotoFileUri(int fileName) {
             // Get safe storage directory for photos
             // Use `getExternalFilesDir` on Context to access package-specific directories.
             // This way, we don't need to request external read/write runtime permissions.
@@ -217,7 +242,7 @@ import static android.content.Context.CAMERA_SERVICE;
             }
 
             // Return the file target for the photo based on filename
-            return new File(mediaStorageDir.getPath() + File.separator + fileName);
+            return new File(mediaStorageDir.getPath() + File.separator + this_user.getUid()+name_count );
         }
 
         private void checkifLoggedin(FirebaseUser user){
@@ -230,7 +255,7 @@ import static android.content.Context.CAMERA_SERVICE;
             }}
         public void savePostFirebase(final String description, final File photoFile, final FirebaseUser this_user) {
             final Uri file = Uri.fromFile(photoFile);
-            StorageReference fileref = storageRef.child("images/"+file.getLastPathSegment());
+            fileref = storageRef.child("images/"+file.getLastPathSegment());
             Log.d(TAG, "savePostFirebase: Image about to upload.");
             uploadTask = fileref.putFile(file);
 
@@ -252,9 +277,10 @@ import static android.content.Context.CAMERA_SERVICE;
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     //File Metadata and content type
                     Log.d(TAG, "onSuccess: Uploaded Image" );
+                    Log.d(TAG, "onSuccess: Uploaded Image" );
 
                     Uri firebaseUrl =taskSnapshot.getUploadSessionUri();
-                    addPhotoToDatabase(description, firebaseUrl.toString(), photoFile);
+                    //addPhotoToDatabase(description, firebaseUrl.toString());
                     Intent intent = new Intent (getContext(), MainActivity.class);
                     startActivity(intent);
                 }
@@ -262,18 +288,24 @@ import static android.content.Context.CAMERA_SERVICE;
 
         }
 
-        private void addPhotoToDatabase (String description, String url, File photo){
+        private void addPhotoToDatabase (String description, String url){
             Log.d(TAG, "addPhotoToDatabase: adding photo to database");
 
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference("allPhotos");
+
+            myRef.setValue(fileref.getStream());
+/*
             String newPhotoKey = mRef.child(mcontext.getString(R.string.dbname_photos)).push().getKey();
             File photoFile = photo;
             String newdescripiton = description;
             String user_id = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-            mRef.child(mcontext.getString(R.string.user_photo_name))
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid())
-                    .child(newPhotoKey).setValue(photo);
-            mRef.child(mcontext.getString(R.string.user_photo_node)).child(newPhotoKey).setValue(photo);
-
+            mRef.child(mcontext.getString(R.string.allPhotos)).child(user_id).setValue(photo);
+            mRef.child(mcontext.getString(R.string.userphotos)).child(user_id)
+                    .child(String.valueOf(R.string.upload)).child(String.valueOf(System.currentTimeMillis()*1000)).setValue(photo);
+            mRef.child(mcontext.getString(R.string.userphotos)).child(user_id)
+                    .child(String.valueOf(R.string.upload)).child(String.valueOf(R.string.description)).setValue(description);
+*/
         }
     }
